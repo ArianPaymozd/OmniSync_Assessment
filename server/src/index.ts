@@ -1,8 +1,13 @@
-    import express from 'express';
+    import express, {Request} from 'express';
+    import cors from "cors"
     import { Pool } from 'pg'
+    import router from './routes';
 
     const app = express();
+    app.use(express.json())
+    app.use(express.urlencoded({ extended: true }))
     const port = process.env.PORT || 8000;
+    app.use(cors())
 
     const pool = new Pool({
         user: process.env.POSTGRES_USER,
@@ -13,17 +18,17 @@
     });
 
     app.get('/test_seed', async (req, res) => {
-    try {
-        const client = await pool.connect();
-        const result = await client.query('SELECT * FROM cards');
-        client.release();
-        console.log(result.rows)
-        res.json(JSON.stringify(result.rows));
-    } catch (err) {
-        console.error('Error connecting to PostgreSQL:', err);
-        res.status(500).send('Error connecting to database');
-    }
+        try {
+            const client = await pool.connect();
+            const result = await client.query('SELECT * FROM cards');
+            client.release();
+            res.json(result.rows);
+        } catch (err) {
+            console.error('Error connecting to PostgreSQL:', err);
+            res.status(500).send('Error connecting to database');
+        }
     });
+    app.use('/api', router);
 
     app.listen(port, () => {
         console.log(`Server is running on http://localhost:${port}`);

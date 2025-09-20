@@ -4,19 +4,22 @@
   "description": "",
   "license": "ISC",
   "author": "",
-  "type": "module",
   "main": "index.js",
   "scripts": {
     "build": "tsc",
     "start:dev": "node -r dotenv/config dist/index.js",
-    "start:watch": "nodemon --exec ts-node src/index.ts"
+    "start:watch": "nodemon --watch src --ext ts --exec ts-node src/index.ts"
   },
   "dependencies": {
+    "@types/body-parser": "^1.19.6",
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "pg": "^8.16.3"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/node": "^24.5.2",
     "@types/pg": "^8.15.5",

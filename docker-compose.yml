@@ -4,13 +4,8 @@ services:
       context: ./
       dockerfile: app/Dockerfile
     network_mode: host
-    # volumes:
-    #   - ./app/src:/app/src
-    develop:
-      watch:
-        - action: sync 
-          path: ./app/src 
-          target: /app/src
+    volumes:
+      - ./app/src:/app/src
 
   nodeserver:
     restart: always
@@ -20,7 +15,6 @@ services:
     network_mode: host
     volumes:
       - ./server/src:/server/src
-      - ignore:/server/node_modules/
     ports:
       - "8000:8000"
     environment:
