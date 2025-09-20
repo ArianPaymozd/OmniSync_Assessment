@@ -18,13 +18,9 @@ services:
       context: ./
       dockerfile: server/Dockerfile
     network_mode: host
-  # volumes:
-  #   - ./server:/server
-    develop:
-      watch:
-        - action: sync 
-          path: ./server
-          target: /server
+    volumes:
+      - ./server/src:/server/src
+      - ignore:/server/node_modules/
     ports:
       - "8000:8000"
     environment:
@@ -32,7 +28,7 @@ services:
       POSTGRES_PASSWORD: pass
       POSTGRES_DB: mydatabase
       POSTGRES_HOST: localhost
-      POSTGRES_PORT: 5432
+      POSTGRES_PORT: 5433
     depends_on:
       db:
         condition: service_healthy
@@ -47,14 +43,16 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - pgdata:/postgresql/data
+      - ./database/init/:/docker-entrypoint-initdb.d
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d mydatabase"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mydatabase"]
       interval: 5s
       timeout: 5s
       retries: 5
 
 volumes:
+  ignore:
   pgdata:
 
           
