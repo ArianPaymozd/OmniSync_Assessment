@@ -1,0 +1,60 @@
+services:
+  reactapp:
+    build:
+      context: ./
+      dockerfile: app/Dockerfile
+    network_mode: host
+    # volumes:
+    #   - ./app/src:/app/src
+    develop:
+      watch:
+        - action: sync 
+          path: ./app/src 
+          target: /app/src
+
+  nodeserver:
+    restart: always
+    build:
+      context: ./
+      dockerfile: server/Dockerfile
+    network_mode: host
+  # volumes:
+  #   - ./server:/server
+    develop:
+      watch:
+        - action: sync 
+          path: ./server
+          target: /server
+    ports:
+      - "8000:8000"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: mydatabase
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: mydatabase
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d mydatabase"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+
+          
