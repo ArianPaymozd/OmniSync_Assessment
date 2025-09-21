@@ -15,7 +15,6 @@ export const getCards = async (req: Request, res: Response) => {
         const client = await pool.connect();
         const result = await client.query('SELECT * FROM cards');
         client.release();
-        console.log(result.rows)
         res.json(JSON.stringify(result.rows));
     } catch (err) {
         console.error('Error connecting to PostgreSQL:', err);
@@ -82,10 +81,10 @@ export const clearClicks = async (req: Request, res: Response) => {
             RETURNING *
         `;
 
-        await client.query(query);
+        const result = await client.query(query);
         client.release();
 
-        res.send('All click counts cleared');
+        res.json(result.rows);
     } catch (err) {
         console.error('Error clearing click counts:', err);
         res.status(500).send('Error clearing click counts');

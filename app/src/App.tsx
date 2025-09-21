@@ -5,6 +5,84 @@ import './App.css';
 function App() {
   const [data, setData] = useState<Card[]>([]);
   const [sortOrder, setSortOrder] = useState<Sort>('most_clicked');
+
+  const sortOptions = {
+    'most_clicked': {
+      label: 'Most Clicked',
+      sortFn: (a: Card, b: Card) => {
+        if (a.clicks !== b.clicks) {
+          return b.clicks - a.clicks;
+        } else {
+          return parseInt(a.id) - parseInt(b.id);
+        }
+      }
+    },
+    'least_clicked': {
+      label: 'Least Clicked',
+      sortFn: (a: Card, b: Card) => {
+        if (a.clicks !== b.clicks) {
+          return a.clicks - b.clicks;
+        } else {
+          return parseInt(a.id) - parseInt(b.id);
+        }
+      }
+    },
+    'first_clicked': {
+      label: 'First Clicked',
+      sortFn: (a: Card, b: Card) => {
+        if (a.first_click && b.first_click) {
+          return new Date(a.first_click).getTime() - new Date(b.first_click).getTime();
+        } else if (a.first_click) {
+          return -1;
+        } else if (b.first_click) {
+          return 1;
+        } else {
+          return parseInt(a.id) - parseInt(b.id);
+        }
+      }
+    },
+    'last_clicked': {
+      label: 'Last Clicked',
+      sortFn: (a: Card, b: Card) => {
+        if (a.first_click && b.first_click) {
+          return new Date(b.first_click).getTime() - new Date(a.first_click).getTime();
+        } else if (a.first_click) {
+          return -1;
+        } else if (b.first_click) {
+          return 1; 
+        } else {
+          return parseInt(a.id) - parseInt(b.id);
+        }
+      }
+    }
+  }
+
+  const getDateTime = (timestamp: Date | null) => {
+    if (!timestamp) return `Not Clicked Yet`;
+    const date = new Date(timestamp);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const seconds = date.getSeconds();
+    return `
+      ${year}-${month}-${day} 
+      ${hours > 12 
+        ? hours - 12 
+        : hours
+      }
+      :${minutes}:${seconds} 
+      ${hours >= 12 ? 'PM' : 'AM'}
+    `;
+  }
+
+  const sortCards = (cards: Card[], order: Sort) => {
+    const sortedCards = [...cards];
+    sortedCards.sort(sortOptions[order].sortFn);
+    return sortedCards;
+  }
+
   const fetchData = async () => {
     try {
       const response = await fetch(`http://localhost:8000/api/cards`)
@@ -39,72 +117,40 @@ function App() {
     }
   }
 
-  const getDateTime = (timestamp: Date | null) => {
-    if (!timestamp) return `N/A`;
-    const date = new Date(timestamp);
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
-    const seconds = date.getSeconds();
-    return `
-      ${year}-${month}-${day} 
-      ${hours > 12 
-        ? hours - 12 
-        : hours
+  const handleClearClicks = async () => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/cards/clear`, {
+        method: 'POST',
+      });
+      if (response.ok) {
+        const clearedCards = await response.json();
+        setData(sortCards(clearedCards, sortOrder));
       }
-      :${minutes}:${seconds} 
-      ${hours >= 12 ? 'PM' : 'AM'}
-    `;
+    } catch (error) {
+      console.error('Error clearing clicks:', error);
+    }
   }
 
-  const sortCards = (cards: Card[], order: Sort) => {
-    const sortedCards = [...cards];
-    switch (order) {
-      case 'most_clicked':
-        sortedCards.sort((a, b) => b.clicks - a.clicks);
-        break;
-      case 'least_clicked':
-        sortedCards.sort((a, b) => a.clicks - b.clicks);
-        break;
-      case 'first_clicked':
-        sortedCards.sort((a, b) => {
-          if (a.first_click && b.first_click) {
-            return new Date(a.first_click).getTime() - new Date(b.first_click).getTime();
-          } else if (a.first_click) {
-            return -1;
-          } else if (b.first_click) {
-            return 1;
-          } else {
-            return 0;
-          }
-        });
-        break;
-      case 'last_clicked':
-        sortedCards.sort((a, b) => {
-          if (a.first_click && b.first_click) {
-            return new Date(b.first_click).getTime() - new Date(a.first_click).getTime();
-          } else if (a.first_click) {
-            return 1;
-          } else if (b.first_click) {
-            return -1;
-          } else {
-            return 0;
-          }
-        });
-        break;
-      default:
-        break;
-    }
-    return sortedCards;
-  }
   useEffect(() => {
     fetchData();
   }, []);
 
   return (
     <div className="App">
+      <button onClick={() => handleClearClicks()}>Clear Clicks</button>
+      <select 
+        value={sortOrder} 
+        onChange={(e) => {
+          const newSort = e.target.value as Sort;
+          setSortOrder(newSort);
+          setData(sortCards(data, newSort));
+        }}
+      >
+        {Object.entries(sortOptions).map(([key, option]) => (
+          <option key={key} value={key}>{option.label}</option>
+        ))}
+      </select>
+      <hr />
       {data.length > 0 ? data.map((card) => (
         <div onClick={() => handleIncrementClick(card.id)} key={card.id}>
           <h2>Card ID: {card.id}</h2>
