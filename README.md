@@ -3,6 +3,7 @@ I would say I spent about 80% of my time on environment setup and TS configs and
 
 # Getting Started!
 To start the project just go to the root directory where the docker-compose.yml is located and run npm install (just to be safe) and 'docker compose up --build'. Everything should start up automatically
+You should not have to but if the default postgres user/password or ports give you issues you can change all of them in the .env and docker-compose.yml (make sure you do both). For ports only change the ones labled 5433
 
 # Environment Dependencies
 To run this project you need the following software installed:
